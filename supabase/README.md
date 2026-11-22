@@ -30,13 +30,13 @@ The storefront runs with a curated local preview catalog when Supabase variables
 
    ```bash
    supabase functions deploy create-order
-   supabase secrets set NEXT_PUBLIC_SUPABASE_URL=https://pmqhuenycudppwkumorm.supabase.co NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+   supabase secrets set NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
    ```
 
 7. Copy the project URL and publishable key into a local `.env.local`:
 
    ```bash
-   NEXT_PUBLIC_SUPABASE_URL=https://pmqhuenycudppwkumorm.supabase.co
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
    ```
 

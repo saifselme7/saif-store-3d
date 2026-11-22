@@ -1,37 +1,46 @@
-# SAIF STORE
+# saif-store-3d
 
-Premium fashion storefront. Arabic-first RTL clothing brand: tees, hoodies, pants, jackets, and essentials — with cinematic loading, editorial layouts, and a complete checkout flow.
+Arabic-first RTL apparel storefront and admin console built with React, TypeScript, Three.js (React Three Fiber), Framer Motion, and Supabase (PostgreSQL RLS + Edge Functions).
 
-## Run locally
+Live: [demo3shop.vercel.app](https://demo3shop.vercel.app)
+
+## Architecture Notes
+
+- **Private payment-proof upload flow:** Payment screenshots for Vodafone Cash and InstaPay are submitted through the `create-order` Supabase Edge Function (`supabase/functions/create-order/index.ts`). Using only the publishable key, the function creates a signed upload URL scoped to `pending/` (where `anon` has `INSERT`-only storage access and zero `SELECT` policy), uploads the validated file, and invokes the `create_order` RPC, which verifies the storage object exists before mutating stock or writing the order.
+- **Server-side order integrity & scoped tracking:** Prices, variant stock, totals, and delivery fields are validated inside PostgreSQL RPCs. Admins inspect payment screenshots through short-lived signed URLs authorized by `public.is_admin()`. Customers track orders via `get_public_order_status(order_number, phone)`, which returns non-sensitive status fields only when both identifiers match.
+- **Offline preview fallback:** When Supabase environment variables are absent, the storefront runs against a local catalog and browser-persisted cart/order state so the UI can be previewed without backend credentials.
+- **3D & media stack:** Integrates React Three Fiber / Drei for the 3D hero scene alongside Framer Motion transitions and `hls.js` support.
+
+## Stack
+
+- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS
+- **3D & Motion:** Three.js, `@react-three/fiber`, `@react-three/drei`, Framer Motion, `hls.js`
+- **Backend:** Supabase (PostgreSQL, RLS, RPCs, Private Storage, Deno Edge Functions)
+
+## Routes
+
+- Public storefront: `/`, `/products`, `/category/:slug`, `/product/:slug`, `/cart`, `/checkout`, `/success/:orderNumber`, `/track`
+- Admin console: `/admin` (unlisted in public nav; requires an authenticated user with `profiles.role = 'admin'`)
+
+## Local Setup
 
 ```bash
 npm install
 cp .env.example .env.local
+# Optional: set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+# (vite.config.ts exposes NEXT_PUBLIC_ via envPrefix)
 npm run dev
 ```
 
-The app works without Supabase variables as a curated preview: products, cart, and orders are stored locally in the browser. Connect Supabase for production catalog management, secure orders, private proof storage, and the admin dashboard.
+Verification:
 
 ```bash
 npm run typecheck
 npm run build
 ```
 
-## Public routes
+For full database schema, RLS policies, Edge Function deployment, and first-admin provisioning, see [`supabase/README.md`](./supabase/README.md).
 
-- `/` — campaign homepage
-- `/products` — full catalog, category filters, and sorting
-- `/category/:slug` — category storefront
-- `/product/:slug` — gallery, variants, stock, and related products
-- `/cart` — persistent cart
-- `/checkout` — Arabic checkout with Vodafone Cash / InstaPay proof upload
-- `/success/:orderNumber` — order confirmation
-- `/track` — customer-owned order tracking
+## License
 
-The admin route is `/admin` and is not linked from the public navigation. It requires a Supabase-authenticated user whose `profiles.role` value is `admin`.
-
-## Supabase
-
-Run [`supabase/schema.sql`](./supabase/schema.sql) in the new project; it contains the full schema, policies, buckets, RPCs, and starter catalog. [`supabase/seed.sql`](./supabase/seed.sql) remains available as a repeatable catalog-only seed. Deployment and first-admin instructions are in [`supabase/README.md`](./supabase/README.md).
-
-The browser only receives the public Supabase key. Order creation validates prices, totals, variants, stock, delivery, and payment method inside a server-side RPC. Screenshots go through the `create-order` Edge Function into the private `payment-proofs` bucket; admins view them through short-lived signed URLs.
+[MIT](./LICENSE)
